@@ -1,107 +1,145 @@
 function calc(inputString: string): void {
-        const tokens = inputString.split(" ").filter(token => token !== "");
-        const stack: Array<string> = [];
-        const outputLine: Array<number> = [];
-        
-        for (const token of tokens) {
-            if (isNumber(token)) {
-                outputLine.push(Number(token));
-            } else if (isMathOperation(token)) {
-                while (stack.length > 0) {
-                    const topOperation = stack[stack.length - 1];
-                    if (topOperation && isMathOperation(topOperation)) {
-                        if (getPriority(topOperation) >= getPriority(token)) {
-                            const operation = stack.pop();
-                            if (operation) {
-                                applyOperation(operation, outputLine);
-                            }
-                        } else {
-                            break;
-                        }
+    enum State {
+        START, 
+        NUMBER,
+        OPERATOR,
+        WHITESPACE,
+        ERROR
+    };
+
+    let state: State = State.START;
+    let currentNumber = '';
+    let outputStack: number[] = [];
+    let operatorStack: string[] = [];
+    let i = 0;
+
+    while (i < inputString.length) {
+
+        let char = inputString[i];
+
+        if (char === undefined) {
+            break;
+        }
+
+        switch (state) {
+            case State.START:
+                if (isNumber(char)) {
+                    state = State.NUMBER;
+                    currentNumber = char; 
+                } else if (isOperator(char)) {
+                    state = State.OPERATOR;
+                    operatorStack.push(char);
+                } else if (isAcceptableCharacters(char)) {
+                    state = State.START;
+                } else {
+                    state = State.ERROR;
+                }
+                break;
+
+            case State.NUMBER:
+                if (isNumber(char)) {
+                    currentNumber += char;
+                } else {
+                    outputStack.push(Number(currentNumber));
+                    currentNumber = '';
+
+                    if (isOperator(char)) {
+                        state = State.OPERATOR;
+                        operatorStack.push(char);
+                    } else if (isAcceptableCharacters(char)){
+                        state = State.START;
                     } else {
-                        break;
-                    }
+                        state = State.ERROR;
+                    } 
                 }
-                stack.push(token);
-            } else if (token === "(") {
-                stack.push("(");
-            } else if (token === ")") {
-                while (stack.length > 0 && stack[stack.length - 1] !== "(") {
-                    const operation = stack.pop();
-                    applyOperation(operation!, outputLine);
+                break;
+
+            case State.OPERATOR:
+                if (isOperator(char)) {
+                    performOperation();
+                    operatorStack.push(char);
+                    state = State.OPERATOR;
+                } else if (isNumber(char)) {
+                    state = State.NUMBER;
+                    currentNumber = char;
+                } else if (isAcceptableCharacters(char)) {
+                    state = State.START;
+                } else {
+                    state = State.ERROR;
                 }
-                if (stack.length === 0 || stack.pop() !== "(") {
-                    throw new Error("Ошибка со скобками: отсутствует открывающая скобка");
-                }
-            } else {
-                throw new Error(`Неизвестный токен: ${token}`);
-            }
+                break;
+            case State.ERROR:
+                throw new Error("Ошибка в выражении");
+        }
+        i++;
+    }
+
+    if (currentNumber !== '') {
+        outputStack.push(Number(currentNumber));
+    }
+
+    while (operatorStack.length > 0) {
+        performOperation();
+    }
+
+    if (outputStack.length !== 1) {
+        throw new Error("ошибка в выражении");
+    }
+
+    const result = outputStack[0];
+    console.log(`calc("${inputString}") = ${result}`);
+
+     function performOperation(): void {
+        if (operatorStack.length === 0 || outputStack.length < 2) {
+            throw new Error("Недостаточно операндов для операции");
         }
         
-        while (stack.length > 0) {
-            const operation = stack.pop();
-            if (operation === "(") {
-                throw new Error("Ошибка со скобками: отсутствует закрывающая скобка");
-            }
-            applyOperation(operation!, outputLine);
-        }
+        const operator = operatorStack.pop()!;
+        const right = outputStack.pop()!;
+        const left = outputStack.pop()!;
         
-        const result = outputLine.pop();
-        if (result === undefined || outputLine.length > 0 || stack.length > 0) {
-            throw new Error("Некорректное выражение");
+        switch (operator) {
+            case "+":
+                outputStack.push(left + right);
+                break;
+            case "-":
+                outputStack.push(left - right);
+                break;
+            case "*":
+                outputStack.push(left * right);
+                break;
+            case "/":
+                if (right === 0) {
+                    throw new Error("Деление на ноль");
+                }
+                outputStack.push(left / right);
+                break;
+            default:
+                throw new Error(`Неизвестная операция: ${operator}`);
         }
-        
-        console.log(`calc("${inputString}") = ${result}`);
     }
-
-function isNumber(value: string): boolean {
-    return !isNaN(Number(value));
 }
 
-function isMathOperation(value: string): boolean {
-    return (value === "+") || (value === "-") || (value === "*") || (value === "/");
+function isNumber(char: string) {
+    return char >= '0' && char <= '9';
 }
 
-function getPriority(operation: string): number {
-    if (operation === "+" || operation === "-") {
-        return 1;
-    } else if (operation === "*" || operation === "/") {
-        return 2;
-    }
-    return 0;
+function isOperator(char: string): boolean {
+    return char === '+' || char === '-' || char === '*' || char === '/';
 }
 
-function applyOperation(operation: string, output: Array<number>): void {
-    if (output.length < 2) {
-        throw new Error("Недостаточно чисел для операции");
-    }
-    
-    const right = output.pop()!;
-    const left = output.pop()!;
-    
-    switch (operation) {
-        case "+":
-            output.push(left + right);
-            break;
-        case "-":
-            output.push(left - right);
-            break;
-        case "*":
-            output.push(left * right);
-            break;
-        case "/":
-            if (right === 0) {
-                throw new Error("Деление на ноль");
-            }
-            output.push(left / right);
-            break;
-        default:
-            throw new Error(`Неизвестная операция: ${operation}`);
-    }
+function isAcceptableCharacters(char: string) {
+    const acceptableCharacters: Array<string> = ["(", ")"];
+    return acceptableCharacters.includes(char);
 }
 
 console.log("Результаты тестов:");
 calc("+ 3 4"); 
 calc("* ( - 5 6 ) 7"); 
 calc("+ * 3 4 5");
-calc("- 10 3");
+calc("- / * 10 2 5 3");
+calc("+ ( * 2 3 ) ( / 8 4 )");
+calc("+ * 2 3 * 4 5");
+calc("+ - * 2 3 4 / 6 2");
+calc("* -4 -3");
+calc("* ( + -2 5 ) 3");
