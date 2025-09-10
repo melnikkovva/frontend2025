@@ -3,7 +3,6 @@ function calc(inputString: string): void {
         START, 
         NUMBER,
         OPERATOR,
-        WHITESPACE,
         ERROR
     };
 
@@ -13,23 +12,28 @@ function calc(inputString: string): void {
     let operatorStack: string[] = [];
     let i = 0;
 
-    while (i < inputString.length) {
+    const chars = inputString.split('');
+    
+    while (i < chars.length) {
+        let char = chars[i];
 
-        let char = inputString[i];
-
-        if (char === undefined) {
+        if (char === undefined){
             break;
         }
 
         switch (state) {
+
+        
             case State.START:
-                if (isNumber(char)) {
+                if (isNumber(char) || (char === '-' && i + 1 < chars.length && isNumber(chars[i + 1]!))) {
                     state = State.NUMBER;
-                    currentNumber = char; 
+                    currentNumber = char;
                 } else if (isOperator(char)) {
                     state = State.OPERATOR;
                     operatorStack.push(char);
-                } else if (isAcceptableCharacters(char)) {
+                } else if (char === '(' || char === ')') {
+                    state = State.START;
+                } else if (char === ' ') {
                     state = State.START;
                 } else {
                     state = State.ERROR;
@@ -46,11 +50,14 @@ function calc(inputString: string): void {
                     if (isOperator(char)) {
                         state = State.OPERATOR;
                         operatorStack.push(char);
-                    } else if (isAcceptableCharacters(char)){
+                    } else if (char === '(' || char === ')') {
+                        state = State.START;
+                    } else if (char === ' ') {
                         state = State.START;
                     } else {
                         state = State.ERROR;
-                    } 
+                    }
+                    continue;
                 }
                 break;
 
@@ -58,16 +65,18 @@ function calc(inputString: string): void {
                 if (isOperator(char)) {
                     performOperation();
                     operatorStack.push(char);
-                    state = State.OPERATOR;
-                } else if (isNumber(char)) {
+                } else if (isNumber(char) || (char === '-' && i + 1 < chars.length && isNumber(chars[i + 1]!))) {
                     state = State.NUMBER;
                     currentNumber = char;
-                } else if (isAcceptableCharacters(char)) {
+                } else if (char === '(' || char === ')') {
+                    state = State.START;
+                } else if (char === ' ') {
                     state = State.START;
                 } else {
                     state = State.ERROR;
                 }
                 break;
+                
             case State.ERROR:
                 throw new Error("Ошибка в выражении");
         }
@@ -83,13 +92,13 @@ function calc(inputString: string): void {
     }
 
     if (outputStack.length !== 1) {
-        throw new Error("ошибка в выражении");
+        throw new Error("Ошибка в выражении");
     }
 
     const result = outputStack[0];
     console.log(`calc("${inputString}") = ${result}`);
 
-     function performOperation(): void {
+    function performOperation(): void {
         if (operatorStack.length === 0 || outputStack.length < 2) {
             throw new Error("Недостаточно операндов для операции");
         }
@@ -120,7 +129,7 @@ function calc(inputString: string): void {
     }
 }
 
-function isNumber(char: string) {
+function isNumber(char: string): boolean {
     return char >= '0' && char <= '9';
 }
 
@@ -128,18 +137,13 @@ function isOperator(char: string): boolean {
     return char === '+' || char === '-' || char === '*' || char === '/';
 }
 
-function isAcceptableCharacters(char: string) {
-    const acceptableCharacters: Array<string> = ["(", ")"];
-    return acceptableCharacters.includes(char);
-}
-
 console.log("Результаты тестов:");
 calc("+ 3 4"); 
 calc("* ( - 5 6 ) 7"); 
-calc("+ * 3 4 5");
-calc("- / * 10 2 5 3");
-calc("+ ( * 2 3 ) ( / 8 4 )");
-calc("+ * 2 3 * 4 5");
-calc("+ - * 2 3 4 / 6 2");
-calc("* -4 -3");
-calc("* ( + -2 5 ) 3");
+calc("+ * 3 4 5"); 
+calc("- / * 10 2 5 3"); 
+calc("+ ( * 2 3 ) ( / 8 4 )"); 
+calc("+ * 2 3 * 4 5"); 
+calc("+ - * 2 3 4 / 6 2"); 
+calc("* -4 -3"); 
+calc("* ( + -2 5 ) 3"); 

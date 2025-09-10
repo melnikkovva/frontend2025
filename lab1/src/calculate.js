@@ -6,7 +6,8 @@ function calc(inputString) {
         State[State["START"] = 0] = "START";
         State[State["NUMBER"] = 1] = "NUMBER";
         State[State["OPERATOR"] = 2] = "OPERATOR";
-        State[State["ERROR"] = 3] = "ERROR";
+        State[State["WHITESPACE"] = 3] = "WHITESPACE";
+        State[State["ERROR"] = 4] = "ERROR";
     })(State || (State = {}));
     ;
     let state = State.START;
@@ -14,14 +15,15 @@ function calc(inputString) {
     let outputStack = [];
     let operatorStack = [];
     let i = 0;
-    while (i < inputString.length) {
-        let char = inputString[i];
+    const chars = inputString.split('');
+    while (i < chars.length) {
+        let char = chars[i];
         if (char === undefined) {
             break;
         }
         switch (state) {
             case State.START:
-                if (isNumber(char)) {
+                if (isNumber(char) || (char === '-' && i + 1 < chars.length && isNumber(chars[i + 1]))) {
                     state = State.NUMBER;
                     currentNumber = char;
                 }
@@ -29,7 +31,10 @@ function calc(inputString) {
                     state = State.OPERATOR;
                     operatorStack.push(char);
                 }
-                else if (isAcceptableCharacters(char)) {
+                else if (char === '(' || char === ')') {
+                    state = State.START;
+                }
+                else if (char === ' ') {
                     state = State.START;
                 }
                 else {
@@ -47,25 +52,31 @@ function calc(inputString) {
                         state = State.OPERATOR;
                         operatorStack.push(char);
                     }
-                    else if (isAcceptableCharacters(char)) {
+                    else if (char === '(' || char === ')') {
+                        state = State.START;
+                    }
+                    else if (char === ' ') {
                         state = State.START;
                     }
                     else {
                         state = State.ERROR;
                     }
+                    continue;
                 }
                 break;
             case State.OPERATOR:
                 if (isOperator(char)) {
                     performOperation();
                     operatorStack.push(char);
-                    state = State.OPERATOR;
                 }
-                else if (isNumber(char)) {
+                else if (isNumber(char) || (char === '-' && i + 1 < chars.length && isNumber(chars[i + 1]))) {
                     state = State.NUMBER;
                     currentNumber = char;
                 }
-                else if (isAcceptableCharacters(char)) {
+                else if (char === '(' || char === ')') {
+                    state = State.START;
+                }
+                else if (char === ' ') {
                     state = State.START;
                 }
                 else {
@@ -84,7 +95,7 @@ function calc(inputString) {
         performOperation();
     }
     if (outputStack.length !== 1) {
-        throw new Error("ошибка в выражении");
+        throw new Error("Ошибка в выражении");
     }
     const result = outputStack[0];
     console.log(`calc("${inputString}") = ${result}`);
@@ -122,18 +133,14 @@ function isNumber(char) {
 function isOperator(char) {
     return char === '+' || char === '-' || char === '*' || char === '/';
 }
-function isAcceptableCharacters(char) {
-    const acceptableCharacters = ["(", ")", " "];
-    return acceptableCharacters.includes(char);
-}
 console.log("Результаты тестов:");
-calc("+ 3 4");
-calc("* ( - 5 6 ) 7");
-calc("+ * 3 4 5");
-calc("- / * 10 2 5 3");
-calc("+ ( * 2 3 ) ( / 8 4 )");
-calc("+ * 2 3 * 4 5");
-calc("+ - * 2 3 4 / 6 2");
-calc("* -4 -3");
-calc("* ( + -2 5 ) 3");
+calc("+ 3 4"); // 7
+calc("* ( - 5 6 ) 7"); // -7
+calc("+ * 3 4 5"); // 17
+calc("- / * 10 2 5 3"); // 1
+calc("+ ( * 2 3 ) ( / 8 4 )"); // 8
+calc("+ * 2 3 * 4 5"); // 26
+calc("+ - * 2 3 4 / 6 2"); // 5
+calc("* -4 -3"); // 12
+calc("* ( + -2 5 ) 3"); // 9
 //# sourceMappingURL=calculate.js.map
