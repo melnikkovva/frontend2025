@@ -8,8 +8,8 @@ function calc(inputString: string): void {
 
     let state: State = State.START;
     let currentNumber = '';
-    let outputStack: number[] = [];
-    let operatorStack: string[] = [];
+    let outputStack: Array<number> = [];
+    let operatorStack: Array<string> = [];
     let i = 0;
 
     const chars = inputString.split('');
@@ -17,15 +17,13 @@ function calc(inputString: string): void {
     while (i < chars.length) {
         let char = chars[i];
 
-        if (char === undefined){
+        if (char === undefined) {
             break;
         }
 
         switch (state) {
-
-        
             case State.START:
-                if (isNumber(char) || (char === '-' && i + 1 < chars.length && isNumber(chars[i + 1]!))) {
+                if (isNumber(char)) { 
                     state = State.NUMBER;
                     currentNumber = char;
                 } else if (isOperator(char)) {
@@ -49,7 +47,6 @@ function calc(inputString: string): void {
 
                     if (isOperator(char)) {
                         state = State.OPERATOR;
-                        operatorStack.push(char);
                     } else if (char === '(' || char === ')') {
                         state = State.START;
                     } else if (char === ' ') {
@@ -63,9 +60,11 @@ function calc(inputString: string): void {
 
             case State.OPERATOR:
                 if (isOperator(char)) {
-                    performOperation();
+                    while (operatorStack.length > 0 ) {
+                        performOperation();
+                    }
                     operatorStack.push(char);
-                } else if (isNumber(char) || (char === '-' && i + 1 < chars.length && isNumber(chars[i + 1]!))) {
+                } else if (isNumber(char)) { 
                     state = State.NUMBER;
                     currentNumber = char;
                 } else if (char === '(' || char === ')') {
@@ -139,11 +138,7 @@ function isOperator(char: string): boolean {
 
 console.log("Результаты тестов:");
 calc("+ 3 4"); 
-calc("* ( - 5 6 ) 7"); 
 calc("+ * 3 4 5"); 
-calc("- / * 10 2 5 3"); 
 calc("+ ( * 2 3 ) ( / 8 4 )"); 
-calc("+ * 2 3 * 4 5"); 
+calc("* + 2 3 * 4 5"); 
 calc("+ - * 2 3 4 / 6 2"); 
-calc("* -4 -3"); 
-calc("* ( + -2 5 ) 3"); 

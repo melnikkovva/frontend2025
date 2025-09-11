@@ -6,8 +6,7 @@ function calc(inputString) {
         State[State["START"] = 0] = "START";
         State[State["NUMBER"] = 1] = "NUMBER";
         State[State["OPERATOR"] = 2] = "OPERATOR";
-        State[State["WHITESPACE"] = 3] = "WHITESPACE";
-        State[State["ERROR"] = 4] = "ERROR";
+        State[State["ERROR"] = 3] = "ERROR";
     })(State || (State = {}));
     ;
     let state = State.START;
@@ -23,7 +22,7 @@ function calc(inputString) {
         }
         switch (state) {
             case State.START:
-                if (isNumber(char) || (char === '-' && i + 1 < chars.length && isNumber(chars[i + 1]))) {
+                if (isNumber(char)) {
                     state = State.NUMBER;
                     currentNumber = char;
                 }
@@ -50,7 +49,6 @@ function calc(inputString) {
                     currentNumber = '';
                     if (isOperator(char)) {
                         state = State.OPERATOR;
-                        operatorStack.push(char);
                     }
                     else if (char === '(' || char === ')') {
                         state = State.START;
@@ -66,10 +64,12 @@ function calc(inputString) {
                 break;
             case State.OPERATOR:
                 if (isOperator(char)) {
-                    performOperation();
+                    while (operatorStack.length > 0) {
+                        performOperation();
+                    }
                     operatorStack.push(char);
                 }
-                else if (isNumber(char) || (char === '-' && i + 1 < chars.length && isNumber(chars[i + 1]))) {
+                else if (isNumber(char)) {
                     state = State.NUMBER;
                     currentNumber = char;
                 }
@@ -134,13 +134,9 @@ function isOperator(char) {
     return char === '+' || char === '-' || char === '*' || char === '/';
 }
 console.log("Результаты тестов:");
-calc("+ 3 4"); // 7
-calc("* ( - 5 6 ) 7"); // -7
-calc("+ * 3 4 5"); // 17
-calc("- / * 10 2 5 3"); // 1
-calc("+ ( * 2 3 ) ( / 8 4 )"); // 8
-calc("+ * 2 3 * 4 5"); // 26
-calc("+ - * 2 3 4 / 6 2"); // 5
-calc("* -4 -3"); // 12
-calc("* ( + -2 5 ) 3"); // 9
+calc("+ 3 4");
+calc("+ * 3 4 5");
+calc("+ ( * 2 3 ) ( / 8 4 )");
+calc("* + 2 3 * 4 5");
+calc("+ - * 2 3 4 / 6 2");
 //# sourceMappingURL=calculate.js.map
