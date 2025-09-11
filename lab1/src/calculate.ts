@@ -1,144 +1,87 @@
-function calc(inputString: string): void {
-    enum State {
-        START, 
-        NUMBER,
-        OPERATOR,
-        ERROR
-    };
+function calc(inputString: string): number | null {
+    let cleanedString = '';
+    for (let i = 0; i < inputString.length; i++) {
+        const char = inputString[i];
+        if (char !== '(' && char !== ')') {
+            cleanedString += char;
+        }
+    }
+    const tokens = cleanedString.split(' ').filter(token => token != '');
 
-    let state: State = State.START;
-    let currentNumber = '';
-    let outputStack: Array<number> = [];
-    let operatorStack: Array<string> = [];
-    let i = 0;
+    const stack: Array<number> = [];
+    let index = tokens.length - 1;
+    for (index; index >= 0; index--) {
+        let token = tokens[index];
 
-    const chars = inputString.split('');
-    
-    while (i < chars.length) {
-        let char = chars[i];
-
-        if (char === undefined) {
+        if (token == undefined) {
             break;
         }
 
-        switch (state) {
-            case State.START:
-                if (isNumber(char)) { 
-                    state = State.NUMBER;
-                    currentNumber = char;
-                } else if (isOperator(char)) {
-                    state = State.OPERATOR;
-                    operatorStack.push(char);
-                } else if (char === '(' || char === ')') {
-                    state = State.START;
-                } else if (char === ' ') {
-                    state = State.START;
-                } else {
-                    state = State.ERROR;
-                }
-                break;
-
-            case State.NUMBER:
-                if (isNumber(char)) {
-                    currentNumber += char;
-                } else {
-                    outputStack.push(Number(currentNumber));
-                    currentNumber = '';
-
-                    if (isOperator(char)) {
-                        state = State.OPERATOR;
-                    } else if (char === '(' || char === ')') {
-                        state = State.START;
-                    } else if (char === ' ') {
-                        state = State.START;
+        if (isNumber(token)){
+            stack.push(Number(token));
+        } else {
+            const a = stack.pop()!;
+            const b =stack.pop()!;
+            switch (token){
+                case '+':
+                    stack.push(a + b);
+                    break;
+                case '-':
+                    stack.push(a - b);
+                    break;
+                case '*':
+                    stack.push(a * b);
+                    break;
+                case '/':
+                    if (b != 0){
+                        stack.push(a / b);
                     } else {
-                        state = State.ERROR;
+                        console.log('Ошибка: Деление на 0')
                     }
-                    continue;
-                }
-                break;
-
-            case State.OPERATOR:
-                if (isOperator(char)) {
-                    while (operatorStack.length > 0 ) {
-                        performOperation();
-                    }
-                    operatorStack.push(char);
-                } else if (isNumber(char)) { 
-                    state = State.NUMBER;
-                    currentNumber = char;
-                } else if (char === '(' || char === ')') {
-                    state = State.START;
-                } else if (char === ' ') {
-                    state = State.START;
-                } else {
-                    state = State.ERROR;
-                }
-                break;
-                
-            case State.ERROR:
-                throw new Error("Ошибка в выражении");
+                    break;
+            }
         }
-        i++;
-    }
+    };
 
-    if (currentNumber !== '') {
-        outputStack.push(Number(currentNumber));
-    }
+    const result = stack.pop();
 
-    while (operatorStack.length > 0) {
-        performOperation();
+    if (result === undefined || (stack.length > 0)) {
+        console.log('Ошибка: Пустое выражение');
+        return null;
     }
-
-    if (outputStack.length !== 1) {
-        throw new Error("Ошибка в выражении");
-    }
-
-    const result = outputStack[0];
-    console.log(`calc("${inputString}") = ${result}`);
-
-    function performOperation(): void {
-        if (operatorStack.length === 0 || outputStack.length < 2) {
-            throw new Error("Недостаточно операндов для операции");
-        }
-        
-        const operator = operatorStack.pop()!;
-        const right = outputStack.pop()!;
-        const left = outputStack.pop()!;
-        
-        switch (operator) {
-            case "+":
-                outputStack.push(left + right);
-                break;
-            case "-":
-                outputStack.push(left - right);
-                break;
-            case "*":
-                outputStack.push(left * right);
-                break;
-            case "/":
-                if (right === 0) {
-                    throw new Error("Деление на ноль");
-                }
-                outputStack.push(left / right);
-                break;
-            default:
-                throw new Error(`Неизвестная операция: ${operator}`);
-        }
-    }
+    
+    return result;
 }
 
-function isNumber(char: string): boolean {
-    return char >= '0' && char <= '9';
-}
-
-function isOperator(char: string): boolean {
-    return char === '+' || char === '-' || char === '*' || char === '/';
+function isNumber(str: string): boolean {
+    return !isNaN(Number(str));
 }
 
 console.log("Результаты тестов:");
-calc("+ 3 4"); 
-calc("+ * 3 4 5"); 
-calc("+ ( * 2 3 ) ( / 8 4 )"); 
-calc("* + 2 3 * 4 5"); 
-calc("+ - * 2 3 4 / 6 2"); 
+
+
+
+console.log("+ 3 4 =", calc("+ 3 4"));
+console.log("+ * 3 4 5 =", calc("+ * 3 4 5"));
+console.log("* + 2 3 * 4 5 =", calc("* + 2 3 * 4 5"));
+console.log("+ - * 2 3 4 / 6 2 =", calc("+ - * 2 3 4 / 6 2"));
+console.log("* 5 6 =", calc("* 5 6"));
+
+console.log("+ -5 3 =", calc("+ -5 3")); 
+console.log("- 10 -3 =", calc("- 10 -3")); 
+console.log("* -2 -4 =", calc("* -2 -4")); 
+console.log("/ -12 4 =", calc("/ -12 4")); 
+console.log("+ * -2 3 5 =", calc("+ * -2 3 5")); 
+
+console.log("+ 3.5 2.1 =", calc("+ 3.5 2.1")); 
+console.log("- 7.8 2.3 =", calc("- 7.8 2.3")); 
+console.log("* 1.5 4 =", calc("* 1.5 4")); 
+console.log("/ 9.6 2 =", calc("/ 9.6 2")); 
+console.log("+ / 10 4 * 1.5 2 =", calc("+ / 10 4 * 1.5 2")); 
+
+console.log("+ -3.2 1.8 =", calc("+ -3.2 1.8")); 
+console.log("* -2.5 -0.4 =", calc("* -2.5 -0.4")); 
+console.log("- / -12 3 * 2.5 2 =", calc("- / -12 3 * 2.5 2")); 
+
+console.log('+ ( * 2.5 3 ) ( / -9 3 ) =', calc('+ ( * 2.5 3 ) ( / -9 3 )')); 
+console.log('* -4 5.5 =', calc('* -4 5.5')); 

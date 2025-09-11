@@ -1,3 +1,7 @@
+import { Presentation, Slide, TextObject, ImageObject, Background } from "../types/types_of_presantation.js";
+
+import { DEFAULT_BACKGROUND, TEXT_OBJECT_DEFAULTS, IMAGE_OBJECT_DEFAULTS, DEFAULT_POSITIONS } from "../types/const_for_presantation.ts";
+
 function generateId(): string {
     return crypto.randomUUID();
 }
@@ -37,7 +41,7 @@ function addSlide(presentation: Presentation): Presentation {
     const newSlide: Slide = {
         id: generateId(), 
         slideObjects: [], 
-        background: { type: 'color', color: "#ffffff" } 
+        background: DEFAULT_BACKGROUND 
     };
 
     const newSlides = [...presentation.slides.slides, newSlide];
@@ -74,24 +78,24 @@ function changeSlidePosition(presentation: Presentation, slideId: string, newPos
     };
 }
 
-function addText(slide: Slide, x: number, y: number, text: string): Slide {
+function addText(slide: Slide, x: number = DEFAULT_POSITIONS.X, y: number = DEFAULT_POSITIONS.Y, text: string = ""): Slide {
     const newText: TextObject = {
         id: generateId(),
         type: "text",
-        x: x,
-        y: y,
-        w: 200, 
-        h: 100, 
-        text: text,
-        fontSize: 14,
-        fontFamily: "Gill Sans",
-        fontWeight: 400,
-        textDecoration: "none",
-        textAlign: "left",
-        color: "#000000",
+        x,
+        y,
+        w: TEXT_OBJECT_DEFAULTS.WIDTH,
+        h: TEXT_OBJECT_DEFAULTS.HEIGHT,
+        text,
+        fontSize: TEXT_OBJECT_DEFAULTS.FONT_SIZE,
+        fontFamily: TEXT_OBJECT_DEFAULTS.FONT_FAMILY,
+        fontWeight: TEXT_OBJECT_DEFAULTS.FONT_WEIGHT,
+        textDecoration: TEXT_OBJECT_DEFAULTS.TEXT_DECORATION,
+        textAlign: TEXT_OBJECT_DEFAULTS.TEXT_ALIGN,
+        color: TEXT_OBJECT_DEFAULTS.COLOR,
         shadow: {
-            color: "#000000",
-            blur: 0
+            color: TEXT_OBJECT_DEFAULTS.SHADOW.COLOR,
+            blur: TEXT_OBJECT_DEFAULTS.SHADOW.BLUR
         }
     };
 
@@ -101,15 +105,15 @@ function addText(slide: Slide, x: number, y: number, text: string): Slide {
     };
 }
 
-function addImage(slide: Slide, x: number, y: number, src: string): Slide {
+function addImage(slide: Slide, x: number = DEFAULT_POSITIONS.X, y: number = DEFAULT_POSITIONS.Y, src: string): Slide {
     const newImage: ImageObject = {
         id: generateId(),
         type: "image",
-        x: x,
-        y: y,
-        w: 300, 
-        h: 200, 
-        src: src
+        x,
+        y,
+        w: IMAGE_OBJECT_DEFAULTS.WIDTH,
+        h: IMAGE_OBJECT_DEFAULTS.HEIGHT,
+        src
     };
 
     return {

@@ -1,10 +1,10 @@
-type Presentation = {
+export type Presentation = {
     id: string;
     title: string;
     slides: Slides;
 }
 
-type Slide = {
+export type Slide = {
     id: string;
     slideObjects: Array<SlideObject>;
     background: Background;
@@ -12,7 +12,7 @@ type Slide = {
 
 type SlideObject = TextObject | ImageObject
 
-type Background = Color | Picture
+export type Background = Color | Picture
 
 type Color = {
     type: 'color';
@@ -29,19 +29,23 @@ type Slides = {
     currentSlideId: string | null;
 }
 
-type Highlighting = {
-    Slide: number;
+export type Selection = {
+    slideId: string;
+    objectId: string;
     typeElement: 'text' | 'image' |'none';
 }
 
-type TextObject = DefaultObject & {
+export type TextDecoration = 'underline' | 'line-through' | 'none';
+export type TextAlign = 'left' | 'center' | 'right' | 'justify';
+
+export type TextObject = BaseSlideObject & {
     type: 'text';
     text: string;
     fontSize: number;
     fontFamily: string;
     fontWeight: number;
-    textDecoration: 'underline' | 'line-through' | 'none';
-    textAlign: 'left' | 'center' | 'right' | 'justify';
+    textDecoration: TextDecoration;
+    textAlign: TextAlign;
     color: string;
     shadow: {
         color: string;
@@ -49,12 +53,12 @@ type TextObject = DefaultObject & {
     }
 }
 
-type ImageObject = DefaultObject & {
+export type ImageObject = BaseSlideObject & {
     type: 'image';
     src: string;
 }
 
-type DefaultObject = {
+type BaseSlideObject = {
     id: string;
     x: number;
     y: number;
