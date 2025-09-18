@@ -1,5 +1,4 @@
-import { Background, TextDecoration, TextAlign } from "./types_of_presantation";
-
+import type { Background, TextDecoration, TextAlign } from "./types_of_presantation";
 export const TEXT_OBJECT_DEFAULTS = {
     WIDTH: 200,
     HEIGHT: 100,
